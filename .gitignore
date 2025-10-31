@@ -28,6 +28,10 @@ yarn-error.log*
 .env*.local
 .env
 
+# Google Cloud credentials
+google-credentials.json
+*-credentials.json
+
 # vercel
 .vercel
 
