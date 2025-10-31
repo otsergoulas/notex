@@ -6,6 +6,7 @@ export async function POST(request: NextRequest) {
   try {
     const formData = await request.formData();
     const image = formData.get('image') as File;
+    const customInstructions = formData.get('instructions') as string | null;
 
     if (!image) {
       return NextResponse.json(
@@ -31,11 +32,14 @@ export async function POST(request: NextRequest) {
 
     // Classify and summarize using OpenAI
     console.log('Classifying and summarizing notes...');
-    const analysis = await classifyAndSummarize(extractedText);
+    console.log('Custom instructions received:', customInstructions || '(none)');
+    const analysis = await classifyAndSummarize(extractedText, customInstructions || undefined);
 
     return NextResponse.json({
       extractedText,
       summary: analysis.summary,
+      actionSteps: analysis.actionSteps,
+      keyInsights: analysis.keyInsights,
       notes: analysis.notes,
       categories: analysis.categories,
     });
