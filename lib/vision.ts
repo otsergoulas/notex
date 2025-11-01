@@ -1,21 +1,29 @@
 import vision from '@google-cloud/vision';
-import path from 'path';
 
 // Initialize the Vision client with service account credentials
 function getVisionClient() {
-  const credentialsPath = process.env.GOOGLE_APPLICATION_CREDENTIALS;
+  // Check if we're using base64 credentials (for deployment)
+  const base64Credentials = process.env.GOOGLE_CREDENTIALS_BASE64;
 
-  if (!credentialsPath) {
-    throw new Error('GOOGLE_APPLICATION_CREDENTIALS environment variable not set');
+  if (base64Credentials) {
+    const credentials = JSON.parse(
+      Buffer.from(base64Credentials, 'base64').toString('utf-8')
+    );
+    return new vision.ImageAnnotatorClient({
+      credentials,
+    });
   }
 
-  // Resolve the path relative to project root
-  const absolutePath = path.isAbsolute(credentialsPath)
-    ? credentialsPath
-    : path.join(process.cwd(), credentialsPath);
+  // Fallback to file path (for local development)
+  const credentialsPath = process.env.GOOGLE_APPLICATION_CREDENTIALS;
+  if (!credentialsPath) {
+    throw new Error(
+      'Either GOOGLE_CREDENTIALS_BASE64 or GOOGLE_APPLICATION_CREDENTIALS must be set'
+    );
+  }
 
   return new vision.ImageAnnotatorClient({
-    keyFilename: absolutePath,
+    keyFilename: credentialsPath,
   });
 }
 

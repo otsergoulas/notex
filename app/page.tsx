@@ -7,7 +7,7 @@ export default function Home() {
         <div className="text-center mb-12">
           <h1 className="text-4xl font-bold mb-4">Notex</h1>
           <p className="text-lg text-gray-600 dark:text-gray-400">
-            Extract and organize notes from images with AI
+            Extract and organize notes from multiple images with AI
           </p>
         </div>
 

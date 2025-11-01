@@ -1,12 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { extractTextFromImage } from '@/lib/vision';
-import { classifyAndSummarize } from '@/lib/openai';
 
 export async function POST(request: NextRequest) {
   try {
     const formData = await request.formData();
     const images = formData.getAll('images') as File[];
-    const customInstructions = formData.get('instructions') as string | null;
 
     if (!images || images.length === 0) {
       return NextResponse.json(
@@ -15,10 +13,9 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    console.log(`Processing ${images.length} image(s)...`);
+    console.log(`Extracting text from ${images.length} image(s)...`);
 
     // Extract text from all images
-    const extractedTexts: string[] = [];
     const extractedTextsPerImage: { imageNumber: number; text: string }[] = [];
 
     for (let i = 0; i < images.length; i++) {
@@ -32,39 +29,24 @@ export async function POST(request: NextRequest) {
       // Extract text using Google Cloud Vision
       const text = await extractTextFromImage(buffer);
       if (text) {
-        extractedTexts.push(`--- Image ${i + 1} ---\n${text}`);
         extractedTextsPerImage.push({ imageNumber: i + 1, text });
       }
     }
 
-    if (extractedTexts.length === 0) {
+    if (extractedTextsPerImage.length === 0) {
       return NextResponse.json(
         { error: 'No text found in any images' },
         { status: 400 }
       );
     }
 
-    // Combine all extracted texts for AI analysis
-    const combinedText = extractedTexts.join('\n\n');
-    console.log('Combined extracted text from all images');
-
-    // Classify and summarize using OpenAI
-    console.log('Classifying and summarizing notes...');
-    console.log('Custom instructions received:', customInstructions || '(none)');
-    const analysis = await classifyAndSummarize(combinedText, customInstructions || undefined);
-
     return NextResponse.json({
       extractedTexts: extractedTextsPerImage,
-      summary: analysis.summary,
-      actionSteps: analysis.actionSteps,
-      keyInsights: analysis.keyInsights,
-      notes: analysis.notes,
-      categories: analysis.categories,
     });
   } catch (error) {
-    console.error('Error processing image:', error);
+    console.error('Error extracting text from images:', error);
     return NextResponse.json(
-      { error: 'Failed to process image' },
+      { error: 'Failed to extract text from images' },
       { status: 500 }
     );
   }

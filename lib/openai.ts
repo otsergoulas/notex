@@ -39,7 +39,7 @@ Respond in JSON format:
 }`;
 
     const response = await openai.chat.completions.create({
-      model: 'gpt-4o-mini',
+      model: 'gpt-5-mini',
       messages: [
         {
           role: 'system',
@@ -51,7 +51,7 @@ Respond in JSON format:
         }
       ],
       response_format: { type: "json_object" },
-      temperature: 0.7,
+      temperature: 1,
     });
 
     console.log("=== OpenAI Response Received ===");
@@ -67,27 +67,3 @@ Respond in JSON format:
   }
 }
 
-export async function generateDetailedDocument(notes: any[], summary: string) {
-  try {
-    const openai = getOpenAIClient();
-    const response = await openai.chat.completions.create({
-      model: 'gpt-4o-mini',
-      messages: [
-        {
-          role: 'system',
-          content: 'You are an AI assistant that creates detailed, well-structured documents from notes. Create a comprehensive document with proper formatting, headings, and organization.'
-        },
-        {
-          role: 'user',
-          content: `Create a detailed document from these notes:\n\nSummary: ${summary}\n\nNotes: ${JSON.stringify(notes, null, 2)}`
-        }
-      ],
-      temperature: 0.7,
-    });
-
-    return response.choices[0].message.content;
-  } catch (error) {
-    console.error('OpenAI API error:', error);
-    throw new Error('Failed to generate detailed document');
-  }
-}
