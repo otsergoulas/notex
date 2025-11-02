@@ -6,7 +6,7 @@ export async function POST(request: NextRequest) {
   try {
     const formData = await request.formData();
     const images = formData.getAll('images') as File[];
-    const customInstructions = formData.get('instructions') as string | null;
+    const userInstructions = formData.get('instructions') as string | null;
 
     if (!images || images.length === 0) {
       return NextResponse.json(
@@ -15,7 +15,16 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    if (!userInstructions) {
+      return NextResponse.json(
+        { error: 'User instructions are required' },
+        { status: 400 }
+      );
+    }
+
     console.log(`Processing ${images.length} image(s)...`);
+
+    const MAX_IMAGE_SIZE = 2 * 1024 * 1024; // 2MB in bytes
 
     // Extract text from all images
     const extractedTexts: string[] = [];
@@ -24,6 +33,14 @@ export async function POST(request: NextRequest) {
     for (let i = 0; i < images.length; i++) {
       const image = images[i];
       console.log(`Extracting text from image ${i + 1}/${images.length}...`);
+
+      // Check image size
+      if (image.size > MAX_IMAGE_SIZE) {
+        return NextResponse.json(
+          { error: `Image ${i + 1} exceeds 2MB size limit. Images larger than 2MB cannot be processed for text extraction.` },
+          { status: 400 }
+        );
+      }
 
       // Convert image to buffer
       const bytes = await image.arrayBuffer();
@@ -50,8 +67,8 @@ export async function POST(request: NextRequest) {
 
     // Classify and summarize using OpenAI
     console.log('Classifying and summarizing notes...');
-    console.log('Custom instructions received:', customInstructions || '(none)');
-    const analysis = await classifyAndSummarize(combinedText, customInstructions || undefined);
+    console.log('User instructions received:', userInstructions);
+    const analysis = await classifyAndSummarize(combinedText, userInstructions);
 
     return NextResponse.json({
       extractedTexts: extractedTextsPerImage,

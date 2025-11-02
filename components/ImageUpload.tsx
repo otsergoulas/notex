@@ -12,7 +12,7 @@ export default function ImageUpload() {
   const [actionSteps, setActionSteps] = useState<string[]>([]);
   const [keyInsights, setKeyInsights] = useState<string[]>([]);
   const [isDragging, setIsDragging] = useState(false);
-  const [customInstructions, setCustomInstructions] = useState<string>("");
+  const [userInstructions, setUserInstructions] = useState<string>("");
   const [showExtractedTextModal, setShowExtractedTextModal] = useState(false);
   const [activeTab, setActiveTab] = useState(0);
 
@@ -105,11 +105,16 @@ export default function ImageUpload() {
   const analyzeWithAI = async () => {
     if (extractedTexts.length === 0) return;
 
+    if (!userInstructions.trim()) {
+      alert("Please provide instructions for how you want the text analyzed.");
+      return;
+    }
+
     console.log("🤖 Analyzing text with AI...");
     setProcessing(true);
 
     try {
-      console.log("📋 Custom instructions:", customInstructions || "(none)");
+      console.log("📋 User instructions:", userInstructions);
       const response = await fetch("/api/analyze-text", {
         method: "POST",
         headers: {
@@ -117,7 +122,7 @@ export default function ImageUpload() {
         },
         body: JSON.stringify({
           extractedTexts,
-          customInstructions: customInstructions.trim() || undefined,
+          userInstructions: userInstructions.trim(),
         }),
       });
 
@@ -246,7 +251,7 @@ export default function ImageUpload() {
                   setSummary("");
                   setActionSteps([]);
                   setKeyInsights([]);
-                  setCustomInstructions("");
+                  setUserInstructions("");
                 }}
                 className="rounded-md bg-gray-600 px-4 py-2 text-sm font-semibold text-white hover:bg-gray-700"
               >
@@ -276,21 +281,22 @@ export default function ImageUpload() {
               </button>
             </div>
 
-            {/* Custom Instructions */}
+            {/* User Instructions */}
             <div className="max-w-2xl mx-auto">
               <label htmlFor="instructions" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                Custom Instructions (Optional)
+                Instructions <span className="text-red-600">*</span>
               </label>
               <textarea
                 id="instructions"
-                value={customInstructions}
-                onChange={(e) => setCustomInstructions(e.target.value)}
+                value={userInstructions}
+                onChange={(e) => setUserInstructions(e.target.value)}
                 placeholder="E.g., 'Create action items from these meeting notes' or 'Summarize key technical concepts' or 'Extract to-do list with priorities'"
                 className="w-full px-4 py-3 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 placeholder-gray-400 dark:placeholder-gray-500 focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none"
                 rows={3}
+                required
               />
               <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">
-                Tell the AI what you want it to do with the extracted text
+                Required: Tell the AI what you want it to do with the extracted text
               </p>
             </div>
 

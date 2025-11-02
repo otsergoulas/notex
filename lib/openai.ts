@@ -10,44 +10,21 @@ function getOpenAIClient() {
   return new OpenAI({ apiKey });
 }
 
-export async function classifyAndSummarize(text: string, customInstructions?: string) {
+export async function classifyAndSummarize(text: string, userInstructions: string) {
   try {
     console.log("=== classifyAndSummarize called ===");
     console.log("Input text length:", text.length);
-    console.log("Custom instructions:", customInstructions || "(none)");
+    console.log("User instructions:", userInstructions);
 
     const openai = getOpenAIClient();
     console.log("Making OpenAI API request...");
-
-    const systemPrompt = `You are an AI assistant that helps organize and analyze notes. Your task is to:
-1. Identify distinct notes or sections in the text
-2. Classify each note by topic/category
-3. Create a detailed, meaningful summary that connects the dots between different pieces of information
-4. Generate actionable insights and next steps when relevant
-
-${customInstructions ? `\n**USER'S SPECIFIC INSTRUCTIONS:**\n${customInstructions}\n\nPlease follow these instructions while organizing the notes.` : ''}
-
-Respond in JSON format:
-{
-  "notes": [
-    {"content": "note text", "category": "category name", "position": 0}
-  ],
-  "summary": "A detailed, comprehensive summary that connects ideas and provides context",
-  "actionSteps": ["List of concrete action items or next steps derived from the notes"],
-  "keyInsights": ["Important insights or connections found in the text"],
-  "categories": ["category1", "category2"]
-}`;
 
     const response = await openai.chat.completions.create({
       model: 'gpt-5-mini',
       messages: [
         {
-          role: 'system',
-          content: systemPrompt
-        },
-        {
           role: 'user',
-          content: `Please analyze and organize the following extracted text from notes/whiteboard:\n\n${text}`
+          content: `${userInstructions}\n\nHere is the extracted text from notes/whiteboard:\n\n${text}\n\nPlease respond in JSON format.`
         }
       ],
       response_format: { type: "json_object" },
