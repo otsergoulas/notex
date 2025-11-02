@@ -8,9 +8,7 @@ export default function ImageUpload() {
   const [previews, setPreviews] = useState<string[]>([]);
   const [processing, setProcessing] = useState(false);
   const [extractedTexts, setExtractedTexts] = useState<{ imageNumber: number; text: string }[]>([]);
-  const [summary, setSummary] = useState<string>("");
-  const [actionSteps, setActionSteps] = useState<string[]>([]);
-  const [keyInsights, setKeyInsights] = useState<string[]>([]);
+  const [aiResponse, setAiResponse] = useState<string>("");
   const [isDragging, setIsDragging] = useState(false);
   const [userInstructions, setUserInstructions] = useState<string>("");
   const [showExtractedTextModal, setShowExtractedTextModal] = useState(false);
@@ -68,9 +66,7 @@ export default function ImageUpload() {
     console.log(`🚀 Extracting text from ${files.length} image(s)...`);
     setProcessing(true);
     setExtractedTexts([]);
-    setSummary("");
-    setActionSteps([]);
-    setKeyInsights([]);
+    setAiResponse("");
 
     try {
       const formData = new FormData();
@@ -132,13 +128,9 @@ export default function ImageUpload() {
 
       const data = await response.json();
       console.log("✅ Analysis complete:", data);
-      console.log("📊 Summary:", data.summary);
-      console.log("⚡ Action Steps:", data.actionSteps);
-      console.log("💡 Key Insights:", data.keyInsights);
+      console.log("📊 AI Response:", data.response);
 
-      setSummary(data.summary);
-      setActionSteps(data.actionSteps || []);
-      setKeyInsights(data.keyInsights || []);
+      setAiResponse(data.response || "");
     } catch (error) {
       console.error("Error analyzing text:", error);
       alert("Failed to analyze text. Please try again.");
@@ -248,9 +240,7 @@ export default function ImageUpload() {
                   setFiles([]);
                   setPreviews([]);
                   setExtractedTexts([]);
-                  setSummary("");
-                  setActionSteps([]);
-                  setKeyInsights([]);
+                  setAiResponse("");
                   setUserInstructions("");
                 }}
                 className="rounded-md bg-gray-600 px-4 py-2 text-sm font-semibold text-white hover:bg-gray-700"
@@ -263,7 +253,7 @@ export default function ImageUpload() {
       </div>
 
       {/* Step 2: After text extraction, allow user to review and analyze */}
-      {extractedTexts.length > 0 && !summary && (
+      {extractedTexts.length > 0 && !aiResponse && (
         <div className="rounded-lg border border-gray-300 dark:border-gray-700 p-6 bg-green-50 dark:bg-green-950">
           <h2 className="text-xl font-semibold mb-4">Text Extracted Successfully!</h2>
           <p className="text-sm text-gray-600 dark:text-gray-400 mb-4">
@@ -315,7 +305,7 @@ export default function ImageUpload() {
       )}
 
       {/* Results */}
-      {summary && (
+      {aiResponse && (
         <div className="space-y-4">
           {extractedTexts.length > 0 && (
             <div className="text-center">
@@ -329,36 +319,11 @@ export default function ImageUpload() {
           )}
 
           <div className="rounded-lg border border-gray-300 dark:border-gray-700 p-6 bg-blue-50 dark:bg-blue-950">
-            <h2 className="text-xl font-semibold mb-3">AI Analysis</h2>
-            <div className="space-y-4">
-              <div>
-                <h3 className="text-lg font-medium mb-2 text-blue-900 dark:text-blue-100">Summary</h3>
-                <p className="whitespace-pre-wrap text-gray-700 dark:text-gray-300">
-                  {summary}
-                </p>
-              </div>
-
-              {keyInsights && keyInsights.length > 0 && (
-                <div>
-                  <h3 className="text-lg font-medium mb-2 text-purple-900 dark:text-purple-100">Key Insights</h3>
-                  <ul className="list-disc list-inside space-y-2 text-gray-700 dark:text-gray-300">
-                    {keyInsights.map((insight, index) => (
-                      <li key={index} className="leading-relaxed">{insight}</li>
-                    ))}
-                  </ul>
-                </div>
-              )}
-
-              {actionSteps && actionSteps.length > 0 && (
-                <div>
-                  <h3 className="text-lg font-medium mb-2 text-green-900 dark:text-green-100">Action Steps</h3>
-                  <ol className="list-decimal list-inside space-y-2 text-gray-700 dark:text-gray-300">
-                    {actionSteps.map((step, index) => (
-                      <li key={index} className="leading-relaxed">{step}</li>
-                    ))}
-                  </ol>
-                </div>
-              )}
+            <h2 className="text-xl font-semibold mb-4">AI Response</h2>
+            <div className="prose prose-sm dark:prose-invert max-w-none">
+              <p className="whitespace-pre-wrap text-gray-700 dark:text-gray-300">
+                {aiResponse}
+              </p>
             </div>
           </div>
         </div>

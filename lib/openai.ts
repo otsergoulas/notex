@@ -10,9 +10,9 @@ function getOpenAIClient() {
   return new OpenAI({ apiKey });
 }
 
-export async function classifyAndSummarize(text: string, userInstructions: string) {
+export async function analyzeText(text: string, userInstructions: string) {
   try {
-    console.log("=== classifyAndSummarize called ===");
+    console.log("=== analyzeText called ===");
     console.log("Input text length:", text.length);
     console.log("User instructions:", userInstructions);
 
@@ -20,27 +20,30 @@ export async function classifyAndSummarize(text: string, userInstructions: strin
     console.log("Making OpenAI API request...");
 
     const response = await openai.chat.completions.create({
-      model: 'gpt-5-mini',
+      model: 'gpt-4o-mini',
       messages: [
         {
+          role: 'system',
+          content: 'You are a helpful assistant that analyzes notes and whiteboards based on user instructions.'
+        },
+        {
           role: 'user',
-          content: `${userInstructions}\n\nHere is the extracted text from notes/whiteboard:\n\n${text}\n\nPlease respond in JSON format.`
+          content: `${userInstructions}\n\nHere is the extracted text from notes/whiteboard:\n\n${text}`
         }
       ],
-      response_format: { type: "json_object" },
-      temperature: 1,
+      temperature: 0.7,
     });
 
     console.log("=== OpenAI Response Received ===");
     console.log("Response from chatgpt:", response);
     console.log("Message content:", response.choices[0].message.content);
 
-    const result = JSON.parse(response.choices[0].message.content || '{}');
-    console.log("Parsed result:", result);
-    return result;
+    const result = response.choices[0].message.content || '';
+    console.log("Result:", result);
+    return { response: result };
   } catch (error) {
     console.error('OpenAI API error:', error);
-    throw new Error('Failed to classify and summarize notes');
+    throw new Error('Failed to analyze notes');
   }
 }
 

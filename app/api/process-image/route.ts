@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { extractTextFromImage } from '@/lib/vision';
-import { classifyAndSummarize } from '@/lib/openai';
+import { analyzeText } from '@/lib/openai';
 
 export async function POST(request: NextRequest) {
   try {
@@ -65,18 +65,14 @@ export async function POST(request: NextRequest) {
     const combinedText = extractedTexts.join('\n\n');
     console.log('Combined extracted text from all images');
 
-    // Classify and summarize using OpenAI
-    console.log('Classifying and summarizing notes...');
+    // Analyze using OpenAI
+    console.log('Analyzing notes...');
     console.log('User instructions received:', userInstructions);
-    const analysis = await classifyAndSummarize(combinedText, userInstructions);
+    const analysis = await analyzeText(combinedText, userInstructions);
 
     return NextResponse.json({
       extractedTexts: extractedTextsPerImage,
-      summary: analysis.summary,
-      actionSteps: analysis.actionSteps,
-      keyInsights: analysis.keyInsights,
-      notes: analysis.notes,
-      categories: analysis.categories,
+      response: analysis.response,
     });
   } catch (error) {
     console.error('Error processing image:', error);

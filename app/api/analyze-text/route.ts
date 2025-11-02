@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { classifyAndSummarize } from '@/lib/openai';
+import { analyzeText } from '@/lib/openai';
 
 export async function POST(request: NextRequest) {
   try {
@@ -30,18 +30,14 @@ export async function POST(request: NextRequest) {
       )
       .join('\n\n');
 
-    // Classify and summarize using OpenAI
-    const analysis = await classifyAndSummarize(
+    // Analyze using OpenAI
+    const analysis = await analyzeText(
       combinedText,
       userInstructions
     );
 
     return NextResponse.json({
-      summary: analysis.summary,
-      actionSteps: analysis.actionSteps,
-      keyInsights: analysis.keyInsights,
-      notes: analysis.notes,
-      categories: analysis.categories,
+      response: analysis.response,
     });
   } catch (error) {
     console.error('Error analyzing text:', error);
