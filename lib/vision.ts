@@ -2,16 +2,38 @@ import vision from '@google-cloud/vision';
 
 // Initialize the Vision client with service account credentials
 function getVisionClient() {
-  // Check if we're using base64 credentials (for deployment)
-  const base64Credentials = process.env.GOOGLE_CREDENTIALS_BASE64;
+  // Option 1: JSON string directly (simplest for Vercel)
+  const credentialsJson = process.env.GOOGLE_CREDENTIALS_JSON;
+  if (credentialsJson) {
+    try {
+      const credentials = JSON.parse(credentialsJson);
+      return new vision.ImageAnnotatorClient({
+        credentials,
+      });
+    } catch (error) {
+      console.error('Failed to parse GOOGLE_CREDENTIALS_JSON:', error);
+      throw new Error('Invalid GOOGLE_CREDENTIALS_JSON format');
+    }
+  }
 
+  // Option 2: Base64 encoded credentials
+  const base64Credentials = process.env.GOOGLE_CREDENTIALS_BASE64;
   if (base64Credentials) {
-    const credentials = JSON.parse(
-      Buffer.from(base64Credentials, 'base64').toString('utf-8')
-    );
-    return new vision.ImageAnnotatorClient({
-      credentials,
-    });
+    try {
+      const decodedString = Buffer.from(base64Credentials, 'base64').toString('utf-8');
+      console.log('Decoded credentials length:', decodedString.length);
+      console.log('First 100 chars:', decodedString.substring(0, 100));
+
+      const credentials = JSON.parse(decodedString);
+      return new vision.ImageAnnotatorClient({
+        credentials,
+      });
+    } catch (error) {
+      console.error('Failed to parse Google credentials from base64:', error);
+      console.error('Base64 string length:', base64Credentials.length);
+      console.error('Base64 first 50 chars:', base64Credentials.substring(0, 50));
+      throw new Error('Invalid GOOGLE_CREDENTIALS_BASE64 format');
+    }
   }
 
   // Fallback to file path (for local development)
