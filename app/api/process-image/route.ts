@@ -48,16 +48,17 @@ export async function POST(request: NextRequest) {
 
         // Try compressing with decreasing quality until under 2MB
         while (compressedBuffer.length > MAX_IMAGE_SIZE && quality > 10) {
-          compressedBuffer = await sharp(buffer)
+          const compressed = await sharp(buffer)
             .jpeg({ quality })
             .toBuffer();
+          compressedBuffer = Buffer.from(compressed);
 
           if (compressedBuffer.length > MAX_IMAGE_SIZE) {
             quality -= 10;
           }
         }
 
-        buffer = compressedBuffer;
+        buffer = Buffer.from(compressedBuffer);
         console.log(`Compressed to ${(buffer.length / 1024 / 1024).toFixed(2)}MB with quality ${quality}`);
       }
 
