@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { extractTextFromImage } from '@/lib/vision';
+import sharp from 'sharp';
 
 export async function POST(request: NextRequest) {
   try {
@@ -24,17 +25,31 @@ export async function POST(request: NextRequest) {
       const image = images[i];
       console.log(`Extracting text from image ${i + 1}/${images.length}...`);
 
-      // Check image size
-      if (image.size > MAX_IMAGE_SIZE) {
-        return NextResponse.json(
-          { error: `Image ${i + 1} exceeds 2MB size limit. Images larger than 2MB cannot be processed for text extraction.` },
-          { status: 400 }
-        );
-      }
-
       // Convert image to buffer
       const bytes = await image.arrayBuffer();
-      const buffer = Buffer.from(bytes);
+      let buffer = Buffer.from(bytes);
+
+      // Compress image if it exceeds size limit
+     // if (image.size > MAX_IMAGE_SIZE) {
+        console.log(`Image ${i + 1} is ${(image.size / 1024 / 1024).toFixed(2)}MB, compressing...`);
+
+        let quality = 80;
+        let compressedBuffer = buffer;
+
+        // Try compressing with decreasing quality until under 2MB
+        while (compressedBuffer.length > MAX_IMAGE_SIZE && quality > 10) {
+          compressedBuffer = await sharp(buffer)
+            .jpeg({ quality })
+            .toBuffer();
+
+          if (compressedBuffer.length > MAX_IMAGE_SIZE) {
+            quality -= 10;
+          }
+        }
+
+        buffer = compressedBuffer;
+        console.log(`Compressed to ${(buffer.length / 1024 / 1024).toFixed(2)}MB with quality ${quality}`);
+     // }
 
       // Extract text using Google Cloud Vision
       const text = await extractTextFromImage(buffer);
